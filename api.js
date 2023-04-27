@@ -98,23 +98,38 @@ application.use(bodyParser.json());
 application.post('/api/ajouter/produit', verifierTokenJWT, async (req, res) => {
     const nom = req.body.nom;
     const description = req.body.description;
+    const quantite = req.body.quantite;
     const prix = req.body.prix;
 
     // Vérification de la présence du champ nom
-    if (!nom || !description || !prix)
+    if (!nom || !description || !quantite || !prix)
     {
-        return res.status(400).send({ message: "Le nom, la description et le prix sont obligatoires!" });
+        return res.status(400).send({ message: "Le nom, la description, la quantité et le prix sont obligatoires!" });
     }
 
     // Ajout de l'élément dans la base de données
-    connexion.query('INSERT INTO produits (nom, description, prix) VALUES (?, ?, ?)', [nom, description, prix], (erreur, resultats) => {
+    connexion.query('INSERT INTO produits (nom, description, quantite, prix) VALUES (?, ?, ?, ?)', [nom, description, quantite, prix], (erreur, resultats) => {
         if (erreur)
         {
             console.log(erreur);
             res.status(500).send('Erreur lors de l\'ajout de l\'élément');
         } else
         {
-            res.status(201).send({ message: 'Élément ajouté avec succès', id: resultats.insertId });
+            res.status(201).send({ message: 'Produit ajouté avec succès', id: resultats.insertId });
+        }
+    });
+});
+
+// Route pour Obtenir la liste des produits disponibles dans la bd
+application.get('/api/produits/obtenir', verifierTokenJWT, (requete, reponse) =>
+{
+    connexion.query('SELECT * FROM produits ORDER BY nom', (erreur, resultats) =>
+    {
+        if (erreur)
+        {
+            reponse.status(500).send('Erreur lors de la récupération de la liste des produits');
+        } else {
+            reponse.json(resultats);
         }
     });
 });
