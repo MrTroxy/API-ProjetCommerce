@@ -120,6 +120,46 @@ application.post('/api/ajouter/produit', verifierTokenJWT, async (req, res) => {
     });
 });
 
+// Route pour la suppression d'un produit dans la bd
+application.post('/api/supprimer/produit', verifierTokenJWT, async (req, res) => {
+    const id = req.body.id;
+
+    // Vérification de la présence du champ id
+    if (!id) {
+        return res.status(400).send({ message: "Le champ id est manquant" });
+    }
+
+    // Suppression de l'élément dans la base de données
+    connexion.query('DELETE FROM produits WHERE id = ?', [id], (erreur, resultats) => {
+        if (erreur) {
+            console.log(erreur);
+            res.status(500).send('Erreur lors de la suppression de l\'élément');
+        } else {
+            if (resultats.affectedRows > 0) {
+                res.status(200).send({ message: 'Produit supprimé avec succès', id: id });
+            } else {
+                res.status(404).send({ message: 'Aucun produit trouvé avec cet ID' });
+            }
+        }
+    });
+});
+
+// Route pour obtenir l'ID du dernier produit ajouté
+application.get('/api/produits/dernier', verifierTokenJWT, (req, res) => {
+    connexion.query('SELECT * FROM produits ORDER BY id DESC LIMIT 1', (erreur, resultats) => {
+        if (erreur) {
+            console.log(erreur);
+            res.status(500).send('Erreur lors de la récupération du dernier produit ajouté');
+        } else {
+            if (resultats.length > 0) {
+                res.json({ id: resultats[0].id });
+            } else {
+                res.status(404).send('Aucun produit trouvé');
+            }
+        }
+    });
+});
+
 // Route pour Obtenir la liste des produits disponibles dans la bd
 application.get('/api/produits/obtenir', verifierTokenJWT, (requete, reponse) =>
 {
@@ -139,15 +179,20 @@ application.get('/api/produits/obtenir', verifierTokenJWT, (requete, reponse) =>
 application.use(bodyParser.json());
 application.post('/api/ajouter/jeton', async (req, res) => {
     const numtag = req.body.numtag;
+    const nom = req.body.nom;
 
-    // Vérification de la présence du champ nom
+    // Vérification de la présence du champ numtag et nom
     if (!numtag)
     {
         return res.status(400).send({ message: "Le champ numtag est manquant" });
     }
+    if (!nom)
+    {
+        return res.status(400).send({ message: "Le champ nom est manquant" });
+    }
 
     // Ajout de l'élément dans la base de données
-    connexion.query('INSERT INTO jetons (numtag) VALUES (?)', [numtag], (erreur, resultats) => {
+    connexion.query('INSERT INTO jetons (numtag, nom) VALUES (?, ?)', [numtag, nom], (erreur, resultats) => {
         if (erreur)
         {
             console.log(erreur);
