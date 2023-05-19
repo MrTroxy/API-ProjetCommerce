@@ -204,6 +204,23 @@ application.post('/api/ajouter/jeton', async (req, res) => {
     });
 });
 
+// Route qui permet d'obtenir la liste des jetons avec les heures :
+application.get('/api/jetons/obtenir', verifierTokenJWT, (requete, reponse) =>
+{
+    console.log("Obtention jetons");
+    connexion.query('SELECT * FROM jetons ORDER BY date DESC', (erreur, resultats) =>
+    {
+        if (erreur)
+        {
+            reponse.status(500).send('Erreur lors de la récupération de la liste des jetons');
+            console.log("Obtention erreur");
+        } else {
+            console.log("Obtention success");
+            reponse.json(resultats);
+        }
+    });
+});
+
 // Lancement du serveur
 application.listen
 (
